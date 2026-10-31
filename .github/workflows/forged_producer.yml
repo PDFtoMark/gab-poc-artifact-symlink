@@ -1,0 +1,19 @@
+name: Benchmark Check
+on:
+  workflow_dispatch:
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - name: build artifact dir
+        run: |
+          mkdir -p art
+          printf 'FORGED-BENCHMARK-CONTENT\n' > art/Linux-default-output.md
+          echo 1 > art/NR
+          ln -s /tmp/proof/next-step.sh art/merged.md
+          ls -la art
+      - uses: actions/upload-artifact@v4
+        with:
+          name: md-output
+          path: art/
+          overwrite: true
