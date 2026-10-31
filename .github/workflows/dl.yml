@@ -1,0 +1,41 @@
+name: Download Probe
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: github-script v3.1.0 (target pinned version)
+        id: v3
+        continue-on-error: true
+        uses: actions/github-script@v3.1.0
+        with:
+          script: |
+            var a = await github.actions.listWorkflowRunArtifacts({owner: context.repo.owner, repo: context.repo.repo, run_id: 41182497044});
+            var m = a.data.artifacts.filter(x => x.name == "md-output")[0];
+            var d = await github.actions.downloadArtifact({owner: context.repo.owner, repo: context.repo.repo, artifact_id: m.id, archive_format: 'zip'});
+            require('fs').writeFileSync('/tmp/a.zip', Buffer.from(d.data));
+            core.info("v3 downloaded bytes=" + Buffer.from(d.data).length);
+      - name: github-script v7
+        id: v7
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            var a = await github.rest.actions.listWorkflowRunArtifacts({owner: context.repo.owner, repo: context.repo.repo, run_id: 41182497044});
+            var m = a.data.artifacts.filter(x => x.name == "md-output")[0];
+            var d = await github.rest.actions.downloadArtifact({owner: context.repo.owner, repo: context.repo.repo, artifact_id: m.id, archive_format: 'zip'});
+            core.info("v7 downloaded bytes=" + Buffer.from(d.data).length);
+      - name: download-artifact v4
+        id: da
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: md-output
+          run-id: 41182497044
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: /tmp/da
+      - name: summary
+        run: |
+          echo "v3=${{ steps.v3.outcome }} v7=${{ steps.v7.outcome }} da=${{ steps.da.outcome }}"
+          ls -la /tmp/da 2>/dev/null || true
