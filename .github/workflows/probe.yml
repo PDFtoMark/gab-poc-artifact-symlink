@@ -1,0 +1,21 @@
+name: Backend Probe
+on:
+  workflow_dispatch:
+jobs:
+  envdump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: env
+        run: env | grep -iE 'ACTIONS_|GITHUB_RUN' | sort
+      - name: build
+        run: |
+          mkdir -p art && echo "hello" > art/x-output.md && echo 1 > art/NR
+      - name: v3 upload attempt
+        id: v3
+        continue-on-error: true
+        uses: actions/upload-artifact@v3
+        with:
+          name: md-output-v3
+          path: art/
+      - name: v3 result
+        run: echo "v3 outcome=${{ steps.v3.outcome }}"
